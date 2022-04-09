@@ -185,17 +185,17 @@ log_log_reg <- function(mob_data, asset_data){
 
 
 
-sub_data <- data[(data$date>= '2020-02-08' &  data$date<= '2020-07-08'),]
-head(sub_data)
+#sub_data <- data[(data$date>= '2020-02-08' &  data$date<= '2020-07-08'),]
+#head(sub_data)
 
-model2<-lm(percent_from_baseline ~ retail_and_recreation_percent_change_from_baseline, data = sub_data)
-summary(model2)
+#model2<-lm(percent_from_baseline ~ retail_and_recreation_percent_change_from_baseline, data = sub_data)
+#summary(model2)
 
 
-ggplot(data, aes(date, y = value)) + geom_line(aes(y=percent_from_baseline), color = 'blue') + geom_point(aes(y=retail_and_recreation_percent_change_from_baseline), color = 'red')
+#ggplot(data, aes(date, y = value)) + geom_line(aes(y=percent_from_baseline), color = 'blue') + geom_point(aes(y=retail_and_recreation_percent_change_from_baseline), color = 'red')
 
-SEAS_plot <- ggplot(data = SEAS, aes(x = date, y = adjusted))
-SEAS_plot + geom_line()
+#SEAS_plot <- ggplot(data = SEAS, aes(x = date, y = adjusted))
+#SEAS_plot + geom_line()
 
 
 ```
