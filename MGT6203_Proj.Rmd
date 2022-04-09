@@ -187,19 +187,40 @@ XRT_linear_log_reg <- linear_log_reg(mob_data,XRT_processed)
 XRT_log_log_reg <- log_log_reg(mob_data,XRT_processed)
 
 
-
-
+# linear regression models for partial data of each assets
+# percent from baseline -> asset data; retail_and_recreation -> mobility data
+data <- merge_data(mob_data,SEAS_processed)
 sub_data <- data[(data$date>= '2020-02-08' &  data$date<= '2020-07-08'),]
 head(sub_data)
+# visualization of overall assets vs mobility in partial time frame
+ggplot(sub_data, aes(date, y = value)) + geom_line(aes(y=percent_from_baseline), color = 'blue') + geom_point(aes(y=retail_and_recreation_mobility), color = 'red')
+SEAS_sub_linear<-lm(percent_from_baseline ~ retail_and_recreation_mobility, data = sub_data)
+summary(SEAS_sub_linear) #significant
 
-model2<-lm(percent_from_baseline ~ retail_and_recreation_percent_change_from_baseline, data = sub_data)
-summary(model2)
+data <- merge_data(mob_data,DIS_processed)
+sub_data <- data[(data$date>= '2020-02-08' &  data$date<= '2020-07-08'),]
+head(sub_data)
+DIS_sub_linear<-lm(percent_from_baseline ~ retail_and_recreation_mobility, data = sub_data)
+summary(DIS_sub_linear) #significant
 
+data <- merge_data(mob_data,XRT_processed)
+sub_data <- data[(data$date>= '2020-02-08' &  data$date<= '2020-07-08'),]
+head(sub_data)
+XRT_sub_linear<-lm(percent_from_baseline ~ retail_and_recreation_mobility, data = sub_data)
+summary(XRT_sub_linear) #significant
 
-ggplot(data, aes(date, y = value)) + geom_line(aes(y=percent_from_baseline), color = 'blue') + geom_point(aes(y=retail_and_recreation_percent_change_from_baseline), color = 'red')
+data <- merge_data(mob_data,DBI_processed)
+sub_data <- data[(data$date>= '2020-02-08' &  data$date<= '2020-07-08'),]
+head(sub_data)
+DBI_sub_linear<-lm(percent_from_baseline ~ retail_and_recreation_mobility, data = sub_data)
+summary(DBI_sub_linear) #significant
 
-SEAS_plot <- ggplot(data = SEAS, aes(x = date, y = adjusted))
-SEAS_plot + geom_line()
+data <- merge_data(mob_data,M_processed)
+sub_data <- data[(data$date>= '2020-02-08' &  data$date<= '2020-07-08'),]
+head(sub_data)
+M_sub_linear<-lm(percent_from_baseline ~ retail_and_recreation_mobility, data = sub_data)
+summary(M_sub_linear) #significant
+
 
 
 ```
