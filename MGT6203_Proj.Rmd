@@ -1,0 +1,260 @@
+---
+title: "MGT 6203 Project -- Team070"
+output: 
+  html_notebook: 
+    fig_width: 14
+---
+
+import libraries
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+'installations'
+install.packages('tidyquant')
+install.packages('dplyr')
+install.packages('ggplot2')
+install.packages('ggpubr')
+install.packages('directlabels')
+
+
+library(tidyquant)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(directlabels)
+
+```
+
+This segment of the code will import the Google Mobility Data for USA between 15 Feb 2020 to 26 Mar 2022
+```{r echo=TRUE}
+get_mob_data <- function(){
+  mob_data <- read.csv("US_Mobility_Data.csv")
+  mob_data <- mob_data %>% mutate(date = as.Date(date, format = '%d/%m/%Y'))
+  mob_data <- mob_data[,c('date','retail_and_recreation_percent_change_from_baseline')]
+  names(mob_data)[names(mob_data) == 'retail_and_recreation_percent_change_from_baseline']<-'retail_and_recreation_mobility'
+  
+  return (mob_data)
+}
+
+mob_data <- get_mob_data()
+
+mob_data_plot <- ggplot(data = mob_data, aes(x = date, y = retail_and_recreation_mobility))
+mob_data_plot + geom_point(color = 'blue') + labs(x = 'date', y = 'Retail and Recreation Mobility Percent change from baseline')
+
+```
+
+Importing financial data using TidyQuant
+
+```{r echo=TRUE}
+
+get_price <- function(ticker,start_date, end_date){
+  price <- c(ticker) %>% tq_get(get='stock.prices', from=start_date,to=end_date)
+  return (price)
+}
+
+start_date <- '2020-01-03'
+end_date <- '2022-03-26'
+
+XRT <- get_price('XRT', start_date, end_date)
+DIS <- get_price('DIS', start_date, end_date)
+SEAS <- get_price('SEAS', start_date, end_date)
+DBI <- get_price('DBI', start_date, end_date)
+M <- get_price('M',start_date, end_date)
+
+```
+creating function for data preparation
+
+```{r}
+get_percent_change <- function(asset){
+  asset_sub <- asset[(asset$date >= '2020-01-03' &  asset$date<= '2020-02-06'),]
+  baseline <- median(asset_sub$adjusted)
+  asset$percent_from_baseline <- (asset$adjusted/baseline - 1) *100
+  return (asset[,c('date','percent_from_baseline')])
+}
+
+XRT_processed <- get_percent_change(XRT)
+DIS_processed <- get_percent_change(DIS)
+SEAS_processed <- get_percent_change(SEAS)
+DBI_processed <- get_percent_change(DBI)
+M_processed <- get_percent_change(M)
+
+merged <-  merge(mob_data,XRT_processed, by = 'date')
+names(merged)[names(merged) == 'percent_from_baseline']<-'XRT_percent_from_baseline'
+merged <-  merge(merged,DIS_processed, by = 'date')
+names(merged)[names(merged) == 'percent_from_baseline']<-'DIS_percent_from_baseline'
+merged <-  merge(merged,SEAS_processed, by = 'date')
+names(merged)[names(merged) == 'percent_from_baseline']<-'SEAS_percent_from_baseline'
+merged <-  merge(merged,DBI_processed, by = 'date')
+names(merged)[names(merged) == 'percent_from_baseline']<-'DBI_percent_from_baseline'
+merged <-  merge(merged,M_processed, by = 'date')
+names(merged)[names(merged) == 'percent_from_baseline']<-'M_percent_from_baseline'
+
+all_data <- merged
+summary(all_data)
+```
+Plotting graph
+```{r}
+ggplot()+ 
+  geom_point(data = all_data, aes(x = date, y=retail_and_recreation_mobility, color = 'retail_and_recreation_mobility')) + 
+  geom_line(data = all_data, aes(x = date, y=XRT_percent_from_baseline, color = 'XRT_percent_from_baseline'))  + 
+  geom_line(data = all_data, aes(x = date, y=DIS_percent_from_baseline, color = 'DIS_percent_from_baseline'))  + 
+  geom_line(data = all_data, aes(x = date, y=SEAS_percent_from_baseline, color = 'SEAS_percent_from_baseline'))  + 
+  geom_line(data = all_data, aes(x = date, y=DBI_percent_from_baseline, color = 'DBI_percent_from_baseline'))  + 
+  geom_line(data = all_data, aes(x = date, y=M_percent_from_baseline, color = 'M_percent_from_baseline'))  + 
+  scale_color_manual(name = "Legend", values = c("retail_and_recreation_mobility" = "red", "XRT_percent_from_baseline" = "blue", 'DIS_percent_from_baseline' = "green", 'SEAS_percent_from_baseline' = 'black','DBI_percent_from_baseline' = 'purple','M_percent_from_baseline' = 'cyan' ))+
+  labs(x = 'Date', y = 'Percantage from baseline') +
+  ggtitle("Plot of percentage change from baseline of google mobility data and asset prices ")
+
+```
+
+
+data visualisation
+```{r}
+
+merge_data <- function(mob_data, asset_data){
+  merged <- merge(mob_data, asset_data, by = 'date')
+  data <- merged[,c('date','percent_from_baseline','retail_and_recreation_mobility')]
+  return (data)
+}
+
+plot_price_mob <- function(mob_data, asset_data){
+  data <- merge_data(mob_data,asset_data)
+  plot <- ggplot(data, aes(date, y = value)) + geom_line(aes(y=percent_from_baseline, color = 'blue')) + geom_point(aes(y=retail_and_recreation_mobility, color = 'red'))
+  
+  return (plot)
+}
+
+'plotting graphs'
+XRT_plot <- plot_price_mob(mob_data, XRT_processed)+ggtitle('XRT and Google Mob plot') + labs(x = 'Date', y = '% from baseline') + theme(legend.position = 'none')
+DIS_plot <- plot_price_mob(mob_data, DIS_processed)+ggtitle('DIS and Google Mob plot') + labs(x = 'Date', y = '% from baseline') + theme(legend.position = 'none')
+SEAS_plot <- plot_price_mob(mob_data, SEAS_processed)+ggtitle('SEAS and Google Mob plot') + labs(x = 'Date', y = '% from baseline') + theme(legend.position = 'none')
+DBI_plot <- plot_price_mob(mob_data, DBI_processed)+ggtitle('DBI and Google Mob plot') + labs(x = 'Date', y = '% from baseline') + theme(legend.position = 'none')
+M_plot <- plot_price_mob(mob_data, M_processed)+ggtitle('M and Google Mob plot') + labs(x = 'Date', y = '% from baseline') + theme(legend.position = 'none')
+ggarrange(XRT_plot, DIS_plot, SEAS_plot, DBI_plot, M_plot, ncol = 2, nrow = 3)
+
+```
+
+Training linear regression model
+
+```{r echo=TRUE}
+
+linear_reg <- function(mob_data, asset_data){
+  data <- merge_data(mob_data,asset_data)
+  model <- lm(percent_from_baseline ~ retail_and_recreation_mobility, data = data)
+  print(summary(model))
+  res <- resid(model)
+  plot(data$retail_and_recreation_mobility, res, ylab = 'Residuals', xlab = 'Google Mobility')
+  return (model)
+}
+
+
+log_linear_reg <- function(mob_data, asset_data){
+  data <- merge_data(mob_data,asset_data)
+  data$log_price_percent_from_baseline <- log(data$percent_from_baseline + 100)
+  model <- lm(log_price_percent_from_baseline ~ retail_and_recreation_mobility, data = data)
+  print(summary(model))
+  res <- resid(model)
+  plot(data$retail_and_recreation_mobility, res, ylab = 'Residuals', xlab = 'Google Mobility')
+  
+  return (model)
+}
+
+linear_log_reg <- function(mob_data, asset_data){
+  data <- merge_data(mob_data,asset_data)
+  data$log_retail_and_recreation_mobility <- log(data$retail_and_recreation_mobility + 100)
+  model <- lm(percent_from_baseline ~ log_retail_and_recreation_mobility, data = data)
+  print(summary(model))
+  res <- resid(model)
+  plot(data$retail_and_recreation_mobility, res, ylab = 'Residuals', xlab = 'Google Mobility')
+  
+  return (model)
+}
+
+log_log_reg <- function(mob_data, asset_data){
+  data <- merge_data(mob_data,asset_data)
+  data$log_retail_and_recreation_mobility <- log(data$retail_and_recreation_mobility + 100)
+  data$log_price_percent_from_baseline <- log(data$percent_from_baseline + 100)
+  model <- lm(log_price_percent_from_baseline ~ log_retail_and_recreation_mobility, data = data)
+  print(summary(model))
+  res <- resid(model)
+  plot(data$retail_and_recreation_mobility, res, ylab = 'Residuals', xlab = 'Google Mobility')
+  
+  return (model)
+}
+
+
+XRT_linear_reg <- linear_reg(mob_data,XRT_processed)
+XRT_log_linear_reg <- log_linear_reg(mob_data,XRT_processed)
+XRT_linear_log_reg <- linear_log_reg(mob_data,XRT_processed)
+XRT_log_log_reg <- log_log_reg(mob_data,XRT_processed)
+
+
+
+
+sub_data <- data[(data$date>= '2020-02-08' &  data$date<= '2020-07-08'),]
+head(sub_data)
+
+model2<-lm(percent_from_baseline ~ retail_and_recreation_percent_change_from_baseline, data = sub_data)
+summary(model2)
+
+
+ggplot(data, aes(date, y = value)) + geom_line(aes(y=percent_from_baseline), color = 'blue') + geom_point(aes(y=retail_and_recreation_percent_change_from_baseline), color = 'red')
+
+SEAS_plot <- ggplot(data = SEAS, aes(x = date, y = adjusted))
+SEAS_plot + geom_line()
+
+
+```
+Linear-Linear Regression model of XRT against google mobility data
+
+```{r}
+XRT_linear_reg <- linear_reg(mob_data,XRT_processed)
+```
+
+Log-Linear Regression model of XRT against google mobility data
+
+```{r}
+XRT_log_linear_reg <- log_linear_reg(mob_data,XRT_processed)
+```
+
+Linear-Log Regression model of XRT against google mobility data
+```{r}
+XRT_linear_log_reg <- linear_log_reg(mob_data,XRT_processed)
+```
+Log-Log Regression model of XRT against google mobility data
+```{r}
+XRT_log_log_reg <- log_log_reg(mob_data,XRT_processed)
+```
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
