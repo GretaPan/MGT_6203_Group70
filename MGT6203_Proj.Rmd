@@ -13,8 +13,9 @@ install.packages('dplyr')
 install.packages('ggplot2')
 install.packages('ggpubr')
 install.packages('directlabels')
+install.packages('pastecs')
 
-
+library(pastecs)
 library(tidyquant)
 library(dplyr)
 library(ggplot2)
@@ -89,6 +90,8 @@ names(merged)[names(merged) == 'percent_from_baseline']<-'M_percent_from_baselin
 
 all_data <- merged
 summary(all_data)
+
+stat.desc(subset(all_data, select = -c(date)))
 ```
 Plotting graph
 ```{r}
@@ -141,7 +144,7 @@ linear_reg <- function(mob_data, asset_data){
   model <- lm(percent_from_baseline ~ retail_and_recreation_mobility, data = data)
   print(summary(model))
   res <- resid(model)
-  plot(data$retail_and_recreation_mobility, res, ylab = 'Residuals', xlab = 'Google Mobility')
+  #plot(data$retail_and_recreation_mobility, res, ylab = 'Residuals', xlab = 'Google Mobility')
   return (model)
 }
 
@@ -152,7 +155,7 @@ log_linear_reg <- function(mob_data, asset_data){
   model <- lm(log_price_percent_from_baseline ~ retail_and_recreation_mobility, data = data)
   print(summary(model))
   res <- resid(model)
-  plot(data$retail_and_recreation_mobility, res, ylab = 'Residuals', xlab = 'Google Mobility')
+  #plot(data$retail_and_recreation_mobility, res, ylab = 'Residuals', xlab = 'Google Mobility')
   
   return (model)
 }
@@ -163,7 +166,7 @@ linear_log_reg <- function(mob_data, asset_data){
   model <- lm(percent_from_baseline ~ log_retail_and_recreation_mobility, data = data)
   print(summary(model))
   res <- resid(model)
-  plot(data$retail_and_recreation_mobility, res, ylab = 'Residuals', xlab = 'Google Mobility')
+  #plot(data$retail_and_recreation_mobility, res, ylab = 'Residuals', xlab = 'Google Mobility')
   
   return (model)
 }
@@ -175,17 +178,10 @@ log_log_reg <- function(mob_data, asset_data){
   model <- lm(log_price_percent_from_baseline ~ log_retail_and_recreation_mobility, data = data)
   print(summary(model))
   res <- resid(model)
-  plot(data$retail_and_recreation_mobility, res, ylab = 'Residuals', xlab = 'Google Mobility')
+  #plot(data$retail_and_recreation_mobility, res, ylab = 'Residuals', xlab = 'Google Mobility')
   
   return (model)
 }
-
-
-XRT_linear_reg <- linear_reg(mob_data,XRT_processed)
-XRT_log_linear_reg <- log_linear_reg(mob_data,XRT_processed)
-XRT_linear_log_reg <- linear_log_reg(mob_data,XRT_processed)
-XRT_log_log_reg <- log_log_reg(mob_data,XRT_processed)
-
 
 
 
@@ -203,31 +199,72 @@ SEAS_plot + geom_line()
 
 
 ```
-Linear-Linear Regression model of XRT against google mobility data
+
+
+
 
 ```{r}
 XRT_linear_reg <- linear_reg(mob_data,XRT_processed)
-```
-
-Log-Linear Regression model of XRT against google mobility data
-
-```{r}
 XRT_log_linear_reg <- log_linear_reg(mob_data,XRT_processed)
-```
-
-Linear-Log Regression model of XRT against google mobility data
-```{r}
 XRT_linear_log_reg <- linear_log_reg(mob_data,XRT_processed)
-```
-Log-Log Regression model of XRT against google mobility data
-```{r}
 XRT_log_log_reg <- log_log_reg(mob_data,XRT_processed)
+
+DIS_linear_reg <- linear_reg(mob_data,DIS_processed)
+DIS_log_linear_reg <- log_linear_reg(mob_data,DIS_processed)
+DIS_linear_log_reg <- linear_log_reg(mob_data,DIS_processed)
+DIS_log_log_reg <- log_log_reg(mob_data,DIS_processed)
+
+SEAS_linear_reg <- linear_reg(mob_data,SEAS_processed)
+SEAS_log_linear_reg <- log_linear_reg(mob_data,SEAS_processed)
+SEAS_linear_log_reg <- linear_log_reg(mob_data,SEAS_processed)
+SEAS_log_log_reg <- log_log_reg(mob_data,SEAS_processed)
+
+DBI_linear_reg <- linear_reg(mob_data,DBI_processed)
+DBI_log_linear_reg <- log_linear_reg(mob_data,DBI_processed)
+DBI_linear_log_reg <- linear_log_reg(mob_data,DBI_processed)
+DBI_log_log_reg <- log_log_reg(mob_data,DBI_processed)
+
+M_linear_reg <- linear_reg(mob_data,M_processed)
+M_log_linear_reg <- log_linear_reg(mob_data,M_processed)
+M_linear_log_reg <- linear_log_reg(mob_data,M_processed)
+M_log_log_reg <- log_log_reg(mob_data,M_processed)
+
 ```
 
 ```{r}
+XRT_processed_sub <- XRT_processed[(XRT_processed$date>= '2020-02-08' &  XRT_processed$date<= '2020-07-01'),]
+DIS_processed_sub <- DIS_processed[(DIS_processed$date>= '2020-02-08' &  DIS_processed$date<= '2020-07-01'),]
+SEAS_processed_sub <- SEAS_processed[(SEAS_processed$date>= '2020-02-08' &  SEAS_processed$date<= '2020-07-01'),]
+DBI_processed_sub <- DBI_processed[(DBI_processed$date>= '2020-02-08' &  DBI_processed$date<= '2020-07-01'),]
+M_processed_sub <- M_processed[(M_processed$date>= '2020-02-08' &  M_processed$date<= '2020-07-01'),]
+
+XRT_sub_linear_reg <- linear_reg(mob_data,XRT_processed_sub)
+XRT_sub_log_linear_reg <- log_linear_reg(mob_data,XRT_processed_sub)
+XRT_sub_linear_log_reg <- linear_log_reg(mob_data,XRT_processed_sub)
+XRT_sub_log_log_reg <- log_log_reg(mob_data,XRT_processed_sub)
+
+DIS_sub_linear_reg <- linear_reg(mob_data,DIS_processed_sub)
+DIS_sub_log_linear_reg <- log_linear_reg(mob_data,DIS_processed_sub)
+DIS_sub_linear_log_reg <- linear_log_reg(mob_data,DIS_processed_sub)
+DIS_sub_log_log_reg <- log_log_reg(mob_data,DIS_processed_sub)
+
+SEAS_sub_linear_reg <- linear_reg(mob_data,SEAS_processed_sub)
+SEAS_sub_log_linear_reg <- log_linear_reg(mob_data,SEAS_processed_sub)
+SEAS_sub_linear_log_reg <- linear_log_reg(mob_data,SEAS_processed_sub)
+SEAS_sub_log_log_reg <- log_log_reg(mob_data,SEAS_processed_sub)
+
+DBI_sub_linear_reg <- linear_reg(mob_data,DBI_processed_sub)
+DBI_sub_log_linear_reg <- log_linear_reg(mob_data,DBI_processed_sub)
+DBI_sub_linear_log_reg <- linear_log_reg(mob_data,DBI_processed_sub)
+DBI_sub_log_log_reg <- log_log_reg(mob_data,DBI_processed_sub)
+
+M_sub_linear_reg <- linear_reg(mob_data,M_processed_sub)
+M_sub_log_linear_reg <- log_linear_reg(mob_data,M_processed_sub)
+M_sub_linear_log_reg <- linear_log_reg(mob_data,M_processed_sub)
+M_sub_log_log_reg <- log_log_reg(mob_data,M_processed_sub)
+
 
 ```
-
 
 
 
